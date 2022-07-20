@@ -6,9 +6,13 @@
   "author": {
     "name": "Ly"
   },
+  "files": [
+    "dist"
+  ],
   "scripts": {
     "test": "vitest",
     "build": "rimraf dist && tsc -p tsconfig.build.json",
+    "prepare": "npm run build",
     "release": "npm run build && release-it"
   },
   "dependencies": {
