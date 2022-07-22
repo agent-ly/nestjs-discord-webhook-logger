@@ -9,10 +9,12 @@ import axios from "axios";
 
 type APIEmbed = ReturnType<EmbedBuilder["toJSON"]>;
 
-type WebhookEmbedOptions = {
+export type EmbedColor = number | RGBTuple;
+
+export type WebhookEmbedOptions = {
   fields?: APIEmbed["fields"];
   author?: EmbedAuthorOptions;
-  color?: number | RGBTuple;
+  color?: EmbedColor;
   description?: string;
   footer?: EmbedFooterOptions;
   image?: string;
@@ -22,15 +24,43 @@ type WebhookEmbedOptions = {
   url?: string;
 };
 
+export type DefaultColorOptions = {
+  log?: EmbedColor;
+  warn?: EmbedColor;
+  error?: EmbedColor;
+  debug?: EmbedColor;
+};
+
+const DEFAULT_COLORS = {
+  log: 0x00ff00,
+  warn: 0xffff00,
+  error: 0xff0000,
+  debug: 0xff00ff,
+};
+
+/**
+ * DiscordWebhookLogger
+ * @class DiscordWebhookLogger
+ * @implements {LoggerService}
+ */
 export class DiscordWebhookLogger implements LoggerService {
   private readonly logger = new Logger("DiscordWebhookLogger");
 
+  /**
+   *
+   * @param webhookUrl The webhook url
+   * @param webhookUsername The webhook username
+   * @param webhookAvatarUrl The webhook avatar url
+   * @param defaultColors The default colors to use for each log level
+   */
   constructor(
     private readonly webhookUrl: string,
     private readonly webhookUsername?: string,
-    private readonly webhookAvatarUrl?: string
+    private readonly webhookAvatarUrl?: string,
+    private readonly defaultColors: DefaultColorOptions = {}
   ) {
     if (!webhookUrl) throw new Error("Webhook URL is required");
+    this.defaultColors = { ...DEFAULT_COLORS, ...defaultColors };
   }
 
   private async post(webhookUrl: string, embed: APIEmbed) {
@@ -71,7 +101,7 @@ export class DiscordWebhookLogger implements LoggerService {
     return this.post(
       this.webhookUrl,
       this.build(message, {
-        color: 0x00ff00,
+        color: this.defaultColors.log,
         timestamp: true,
         ...options,
       })
@@ -82,7 +112,7 @@ export class DiscordWebhookLogger implements LoggerService {
     return this.post(
       this.webhookUrl,
       this.build(message, {
-        color: 0xff0000,
+        color: this.defaultColors.error,
         timestamp: true,
         ...options,
       })
@@ -93,7 +123,7 @@ export class DiscordWebhookLogger implements LoggerService {
     return this.post(
       this.webhookUrl,
       this.build(message, {
-        color: 0xffff00,
+        color: this.defaultColors.warn,
         timestamp: true,
         ...options,
       })
@@ -104,7 +134,7 @@ export class DiscordWebhookLogger implements LoggerService {
     return this.post(
       this.webhookUrl,
       this.build(message, {
-        color: 0xff00ff,
+        color: this.defaultColors.debug,
         timestamp: true,
         ...options,
       })
